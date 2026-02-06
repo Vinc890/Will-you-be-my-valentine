@@ -1,21 +1,41 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Great+Vibes&display=swap');
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --primary-red: #e91e63;
+  --deep-wine: #2c001e;
+  --text-color: #ffffff;
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  padding: 0;
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-color);
+  min-height: 100vh;
   overflow-x: hidden;
-  background: #111827;
+  
+  /* Modern Deep Gradient Background */
+  background: linear-gradient(-45deg, #1a0b16, #4a0e23, #751e3e, #2c001e);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
 }
 
-#root {
-  width: 100%;
-  min-height: 100vh;
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
 }
