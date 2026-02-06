@@ -1,11 +1,26 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 .proposal-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  height: 100vh;
   padding: 20px;
   position: relative;
   z-index: 1;
+  overflow: hidden;
 }
 
 .overlay-texture {
@@ -34,23 +49,28 @@
   text-align: center;
   max-width: 500px;
   width: 100%;
+  max-height: 90vh;
   transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: visible; /* Allow button to be visible when escaping */
 }
 
 .image-container {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
 .feature-image {
   width: 100%;
-  max-width: 320px;
+  max-width: 280px;
   height: auto;
+  max-height: 35vh;
+  object-fit: contain;
   border-radius: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease;
@@ -60,12 +80,20 @@
   transform: scale(1.02);
 }
 
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+}
+
 .main-title {
   font-family: "Great Vibes", cursive;
-  font-size: 3rem;
+  font-size: clamp(2rem, 5vw, 3rem);
   color: #fff;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  margin: 0 0 40px 0;
+  margin: 0 0 30px 0;
   line-height: 1.2;
 }
 
@@ -73,22 +101,23 @@
   font-family: "Outfit", sans-serif;
   font-weight: 700;
   color: #ff8fa3;
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
 }
 
 .button-group {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   justify-content: center;
   align-items: center;
   position: relative;
   width: 100%;
-  min-height: 80px;
+  min-height: 60px;
+  flex-shrink: 0;
 }
 
 .btn {
-  padding: 14px 32px;
-  font-size: 1.1rem;
+  padding: 12px 28px;
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
   font-family: "Outfit", sans-serif;
   font-weight: 600;
   border: none;
@@ -121,10 +150,7 @@
 }
 
 .btn-no[style*="fixed"] {
-  z-index: 100;
-  transition:
-    left 0.3s ease,
-    top 0.3s ease;
+  z-index: 9999 !important;
 }
 
 .success-layout {
@@ -133,18 +159,30 @@
   transform: scale(1.05);
 }
 
+.success-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .success-title {
   font-family: "Great Vibes", cursive;
-  font-size: 3.5rem;
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
   color: #ff8fa3;
   margin-bottom: 10px;
   animation: fadeIn 1s ease-in;
 }
 
 .sub-text {
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
   opacity: 0.8;
   letter-spacing: 1px;
+}
+
+.loading {
+  color: #fff;
+  font-size: 1.2rem;
 }
 
 @keyframes fadeIn {
@@ -158,15 +196,93 @@
   }
 }
 
-@media (max-width: 600px) {
+/* Tablet styles */
+@media (max-height: 700px) {
   .glass-card {
-    padding: 30px 20px;
+    padding: 25px 30px;
+    max-height: 95vh;
   }
+
+  .feature-image {
+    max-width: 220px;
+    max-height: 30vh;
+  }
+
+  .image-container {
+    margin-bottom: 15px;
+  }
+
   .main-title {
-    font-size: 2.2rem;
+    margin-bottom: 20px;
   }
+}
+
+/* Mobile styles */
+@media (max-width: 600px) {
+  .proposal-container {
+    padding: 15px;
+  }
+
+  .glass-card {
+    padding: 25px 20px;
+    max-height: 95vh;
+  }
+
+  .feature-image {
+    max-width: 200px;
+    max-height: 28vh;
+  }
+
+  .image-container {
+    margin-bottom: 15px;
+  }
+
+  .main-title {
+    margin-bottom: 20px;
+  }
+
   .btn {
-    padding: 12px 24px;
-    font-size: 1rem;
+    padding: 10px 24px;
+  }
+
+  .button-group {
+    gap: 12px;
+    min-height: 50px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 400px) {
+  .glass-card {
+    padding: 20px 15px;
+  }
+
+  .feature-image {
+    max-width: 180px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+  }
+}
+
+/* Very short screens */
+@media (max-height: 600px) {
+  .glass-card {
+    padding: 20px;
+    max-height: 95vh;
+  }
+
+  .feature-image {
+    max-width: 180px;
+    max-height: 25vh;
+  }
+
+  .image-container {
+    margin-bottom: 10px;
+  }
+
+  .main-title {
+    margin-bottom: 15px;
   }
 }

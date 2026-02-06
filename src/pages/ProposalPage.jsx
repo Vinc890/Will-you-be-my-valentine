@@ -12,6 +12,7 @@ const ProposalPage = () => {
   const [yesStage, setYesStage] = useState(0);
   const [noBtnPosition, setNoBtnPosition] = useState({ position: "relative" });
   const [yesScale, setYesScale] = useState(1);
+  const [isNoButtonFixed, setIsNoButtonFixed] = useState(false);
 
   const yesBtnRef = useRef(null);
   const noBtnRef = useRef(null);
@@ -23,7 +24,6 @@ const ProposalPage = () => {
       return;
     }
     try {
-      // Decode Base64 and then handle UTF-8 characters properly
       const decodedString = decodeURIComponent(escape(atob(dataParam)));
       const parsedData = JSON.parse(decodedString);
       setProposalData({
@@ -53,68 +53,136 @@ const ProposalPage = () => {
     }, 250);
   };
 
+  const calculateGreenZones = (noRect, yesRect, vWidth, vHeight) => {
+    const padding = 15;
+    const buffer = 25;
+
+    const safeZone = {
+      left: padding,
+      right: vWidth - noRect.width - padding,
+      top: padding,
+      bottom: vHeight - noRect.height - padding,
+    };
+
+    const redZone = {
+      left: yesRect.left - buffer,
+      right: yesRect.right + buffer,
+      top: yesRect.top - buffer,
+      bottom: yesRect.bottom + buffer,
+    };
+
+    const greenZones = [];
+
+    // Left zone
+    if (redZone.left - noRect.width > safeZone.left) {
+      greenZones.push({
+        left: safeZone.left,
+        right: Math.min(redZone.left - noRect.width, safeZone.right),
+        top: safeZone.top,
+        bottom: safeZone.bottom,
+      });
+    }
+
+    // Right zone
+    if (redZone.right + noRect.width < safeZone.right) {
+      greenZones.push({
+        left: Math.max(redZone.right, safeZone.left),
+        right: safeZone.right,
+        top: safeZone.top,
+        bottom: safeZone.bottom,
+      });
+    }
+
+    // Top zone
+    if (redZone.top - noRect.height > safeZone.top) {
+      greenZones.push({
+        left: safeZone.left,
+        right: safeZone.right,
+        top: safeZone.top,
+        bottom: Math.min(redZone.top - noRect.height, safeZone.bottom),
+      });
+    }
+
+    // Bottom zone
+    if (redZone.bottom + noRect.height < safeZone.bottom) {
+      greenZones.push({
+        left: safeZone.left,
+        right: safeZone.right,
+        top: Math.max(redZone.bottom, safeZone.top),
+        bottom: safeZone.bottom,
+      });
+    }
+
+    return greenZones;
+  };
+
+  const getRandomPositionFromGreenZone = (greenZones) => {
+    if (greenZones.length === 0) return null;
+
+    const areas = greenZones.map((zone) => {
+      const width = zone.right - zone.left;
+      const height = zone.bottom - zone.top;
+      return width * height;
+    });
+
+    const totalArea = areas.reduce((sum, area) => sum + area, 0);
+    if (totalArea <= 0) return null;
+
+    let randomArea = Math.random() * totalArea;
+    let selectedZone = null;
+
+    for (let i = 0; i < greenZones.length; i++) {
+      randomArea -= areas[i];
+      if (randomArea <= 0) {
+        selectedZone = greenZones[i];
+        break;
+      }
+    }
+
+    if (!selectedZone) selectedZone = greenZones[greenZones.length - 1];
+
+    const randomLeft =
+      selectedZone.left +
+      Math.random() * (selectedZone.right - selectedZone.left);
+    const randomTop =
+      selectedZone.top +
+      Math.random() * (selectedZone.bottom - selectedZone.top);
+
+    return { left: randomLeft, top: randomTop };
+  };
+
   const handleNoInteraction = (e) => {
     e.preventDefault();
     setYesScale((prev) => Math.min(prev + 0.15, 2.5));
 
-    // 1. Get current positions
+    if (!noBtnRef.current || !yesBtnRef.current) return;
+
     const noRect = noBtnRef.current.getBoundingClientRect();
     const yesRect = yesBtnRef.current.getBoundingClientRect();
     const vWidth = window.innerWidth;
     const vHeight = window.innerHeight;
 
-    // 2. Define "Small Move" distance
-    const moveDist = 150;
+    const greenZones = calculateGreenZones(noRect, yesRect, vWidth, vHeight);
+    const newPosition = getRandomPositionFromGreenZone(greenZones);
 
-    // 3. Calculate a new position by shifting slightly
-    // We use a small random offset combined with a directional shift
-    let newLeft = noRect.left + (Math.random() > 0.5 ? moveDist : -moveDist);
-    let newTop = noRect.top + (Math.random() > 0.5 ? moveDist : -moveDist);
-
-    // 4. Boundary Clamping (Don't let it leave the screen)
-    const padding = 20;
-    if (newLeft < padding) newLeft = padding + 50;
-    if (newLeft + noRect.width > vWidth - padding)
-      newLeft = vWidth - noRect.width - padding - 50;
-    if (newTop < padding) newTop = padding + 50;
-    if (newTop + noRect.height > vHeight - padding)
-      newTop = vHeight - noRect.height - padding - 50;
-
-    // 5. Collision Avoidance (Don't let it go under/over the Yes button)
-    // If the new position overlaps with the Yes button area + 40px buffer
-    const buffer = 40;
-    const overlapX =
-      newLeft < yesRect.right + buffer &&
-      newLeft + noRect.width > yesRect.left - buffer;
-    const overlapY =
-      newTop < yesRect.bottom + buffer &&
-      newTop + noRect.height > yesRect.top - buffer;
-
-    if (overlapX && overlapY) {
-      // If it's going to hit the Yes button, push it significantly away to the side
-      newLeft =
-        newLeft < yesRect.left
-          ? yesRect.left - noRect.width - 100
-          : yesRect.right + 100;
-      newTop =
-        newTop < yesRect.top
-          ? yesRect.top - noRect.height - 100
-          : yesRect.bottom + 100;
+    if (newPosition) {
+      setIsNoButtonFixed(true);
+      setNoBtnPosition({
+        position: "fixed",
+        left: `${newPosition.left}px`,
+        top: `${newPosition.top}px`,
+        zIndex: "9999",
+        transition: "all 0.3s ease-out",
+      });
     }
-
-    setNoBtnPosition({
-      position: "fixed",
-      left: `${newLeft}px`,
-      top: `${newTop}px`,
-      zIndex: "999",
-      transition: "all 0.2s ease-out", // Small transition for "smooth flee"
-    });
   };
 
   const handleYesClick = () => {
     if (yesStage < 4) {
       setYesStage(yesStage + 1);
-      setNoBtnPosition({ position: "relative" }); // Reset position for next stage
+      setNoBtnPosition({ position: "relative" });
+      setYesScale(1);
+      setIsNoButtonFixed(false);
     }
   };
 
@@ -125,6 +193,20 @@ const ProposalPage = () => {
   if (!proposalData) return <div className="loading">Loading...</div>;
 
   const isSuccess = yesStage === 4;
+
+  // Render No button component
+  const NoButton = () => (
+    <button
+      ref={noBtnRef}
+      className="btn btn-no"
+      style={noBtnPosition}
+      onMouseEnter={handleNoInteraction}
+      onClick={handleNoInteraction}
+      onTouchStart={handleNoInteraction}
+    >
+      No
+    </button>
+  );
 
   return (
     <div className="proposal-container" ref={containerRef}>
@@ -147,7 +229,7 @@ const ProposalPage = () => {
                   Will you be my Valentine?
                 </span>
               ) : (
-                <span className="warning-text">Are you sure? 🥺</span>
+                <span className="warning-text">Are you sure?</span>
               )}
             </h1>
 
@@ -167,15 +249,8 @@ const ProposalPage = () => {
                 ] || "Yes"}
               </button>
 
-              <button
-                ref={noBtnRef}
-                className="btn btn-no"
-                style={noBtnPosition}
-                onMouseEnter={handleNoInteraction}
-                onClick={handleNoInteraction}
-              >
-                No
-              </button>
+              {/* Render No button inside card when not fixed */}
+              {!isNoButtonFixed && <NoButton />}
             </div>
           </div>
         ) : (
@@ -185,6 +260,9 @@ const ProposalPage = () => {
           </div>
         )}
       </div>
+
+      {/* Render No button outside card when fixed (to escape backdrop-filter containment) */}
+      {isNoButtonFixed && !isSuccess && <NoButton />}
     </div>
   );
 };
