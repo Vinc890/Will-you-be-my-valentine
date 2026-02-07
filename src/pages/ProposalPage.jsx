@@ -249,7 +249,6 @@ const ProposalPage = () => {
                 ] || "Yes"}
               </button>
 
-              {/* Render No button inside card when not fixed */}
               {!isNoButtonFixed && <NoButton />}
             </div>
           </div>
@@ -261,7 +260,6 @@ const ProposalPage = () => {
         )}
       </div>
 
-      {/* Render No button outside card when fixed (to escape backdrop-filter containment) */}
       {isNoButtonFixed && !isSuccess && <NoButton />}
     </div>
   );
